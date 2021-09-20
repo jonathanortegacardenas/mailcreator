@@ -28,7 +28,7 @@ Route::get("logout",function(){
 });
 Route::controllers([
 	'auth' => 'Auth\AuthController',
-	'password' => 'Auth\PasswordController',
+	'password' => 'Auth\ResetPassword',
 ]);
 
 Route::get('home',array('middleware' => 'auth','uses'=>"UserController@dashboard"));
