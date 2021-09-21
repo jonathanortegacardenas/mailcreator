@@ -1,11 +1,12 @@
 <?php
 namespace mailCreator;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 class Blocks extends Model{
 	protected $table='blocks';
 	protected $fillable = ['id','content','position','type','campaign_id'];
 	public function getMaxPosition($campaign_id){
-		return \DB::table($this->table)->where('campaign_id','=',$campaign_id)->max('position');
+		return DB::table($this->table)->where('campaign_id','=',$campaign_id)->max('position');
 	}
 	public function getTemplate($position=0){
     $html="";
