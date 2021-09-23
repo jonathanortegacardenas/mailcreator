@@ -1,31 +1,36 @@
 <?php
 
-namespace mailCreator\Http\Controllers;
+namespace App\Http\Controllers;
 
+use App\Models\User;
+use Exception;
 use Symfony\Component\HttpFoundation\Session\Session;
 use mailCreator\Campaigns;
 use mailCreator\Blocks;
-use mailCreator\User;
 use mailCreator\CampaignUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Http\Response;
 use Illuminate\Contracts\Filesystem\Factory;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use Throwable;
 
-class CampaignsController extends Controller {
+class CampaignsController extends Controller
+{
 
     public function listCampaigns(Request $request) {
-        if (\Auth::user()->type == 0) {
+        if (Auth::user()->type == 0) {
             $campaigns = Campaigns::where('created_at','>=','2019-01-01 00:00:00');
             if($request->has('buscando'))
                 $campaigns = $campaigns->where('title','like',"%$request->buscando%");
             $campaigns = $campaigns->orderBy('id', "DESC")->paginate(20);
         } else {
             $camp = new Campaigns;
-            $campaigns = $camp->getCampaignsByUser(\Auth::user()->id,$request);
+            $campaigns = $camp->getCampaignsByUser(Auth::user()->id,$request);
         }
-        return view('campaigns/list', array('title' => 'Listado de Campa&ntilde;as', 'campaigns' => $campaigns, 'message' => 'Mira las campa&ntilde;as existentes y administralos', 'class' => 'campaigns', 'type' => \Auth::user()->type));
+        return view('campaigns/list', array('title' => 'Listado de Campa&ntilde;as', 'campaigns' => $campaigns, 'message' => 'Mira las campa&ntilde;as existentes y administralos', 'class' => 'campaigns', 'type' => Auth::user()->type));
     }
 
     public function createCampaign(Request $request) {
@@ -60,7 +65,7 @@ class CampaignsController extends Controller {
                     $file->move(public_path() . '/uploads/', $name);
                 }
                 $campaign['logo'] = $name;
-                $campaign['user_id'] = \Auth::user()->id;
+                $campaign['user_id'] = Auth::user()->id;
                 unset($campaign['_token']);
                 $newCamp = new Campaigns;
                 foreach ($campaign as $row => $value) {
@@ -68,16 +73,16 @@ class CampaignsController extends Controller {
                 }
                 $newCamp->save();
                 $campUs['campaign_id'] = $newCamp->id;
-                $campUs['user_id'] = \Auth::user()->id;
+                $campUs['user_id'] = Auth::user()->id;
                 CampaignUser::create($campUs);
                 //Campaigns::create($campaign);
                 $session = new Session();
-                \Session::flash('message', "La campa&ntilde;a se ha ingresado exitosamente");
-                \Session::flash('code', '200');
+                Session::flash('message', "La campa&ntilde;a se ha ingresado exitosamente");
+                Session::flash('code', '200');
                 return Redirect('blocks/list/' . $newCamp->id);
-            } catch (Exception $e) {
-                \Session::flash('message', "Se ha presentado un error por favor comun&iacute;quese con el administrador");
-                \Session::flash('code', "400");
+            } catch (Throwable $e) {
+                Session::flash('message', "Se ha presentado un error por favor comun&iacute;quese con el administrador");
+                Session::flash('code', "400");
             }
         }
         $campaign = new Campaigns();
@@ -129,7 +134,7 @@ class CampaignsController extends Controller {
                     }
                     $campaignRequest['logo'] = $name;
                 }
-                
+
                 if (isset($campaignRequest['logo']) && $campaignRequest['logo'] == "") {
                     unset($campaignRequest['logo']);
                 }
@@ -137,11 +142,11 @@ class CampaignsController extends Controller {
                     $campaign->$row = $value;
                 }
                 $campaign->save();
-                \Session::flash('message', "La campa&ntilde;a se ha editado exitosamente");
-                \Session::flash('code', '200');
-            } catch (Exception $e) {
-                \Session::flash('message', "Se ha presentado un error por favor comun&iacute;quese con el administrador");
-                \Session::flash('code', "400");
+                Session::flash('message', "La campa&ntilde;a se ha editado exitosamente");
+                Session::flash('code', '200');
+            } catch (Throwable $e) {
+                Session::flash('message', "Se ha presentado un error por favor comun&iacute;quese con el administrador");
+                Session::flash('code', "400");
             }
         }
         $campaign->menus = json_decode($campaign->menus, true);
@@ -172,7 +177,7 @@ class CampaignsController extends Controller {
         }
         $camp->save();
         $cu['campaign_id'] = $camp->id;
-        $cu['user_id'] = \Auth::user()->id;
+        $cu['user_id'] = Auth::user()->id;
         CampaignUser::create($cu);
         if (count($blocks) > 0) {
             foreach ($blocks as $b) {
@@ -189,7 +194,7 @@ class CampaignsController extends Controller {
     }
 
     public function downloadCampaign($id) {
-        \Session::put('campaign_id', $id);
+        Session::put('campaign_id', $id);
         $bl = new Blocks;
         $html = $style1 = $style2 = $style3 = $style5 = $style4 = $style6 = $style7 = $style8 = $style9 = "";
 
@@ -258,13 +263,13 @@ class CampaignsController extends Controller {
         }
         $data = View('blocks/download', array('title' => $campaign->title, 'campaign' => $campaign, 'blocks' => $view, 'id' => $id));
         $nameFile = date('YmdGis') . 'index.html';
-        \Storage::disk('local')->put('htmls/' . $nameFile, $data);
+        Storage::disk('local')->put('htmls/' . $nameFile, $data);
         return response()->download(storage_path() . '/app/htmls/' . $nameFile);
     }
 
     public function viewCampaign($id) {
         //die("Servicio temporalmente fuera de línea. Comúnicate con nosotros al 3981000. ");
-        \Session::put('campaign_id', $id);
+        Session::put('campaign_id', $id);
         $bl = new Blocks;
         $blocks = Blocks::where('campaign_id', '=', $id)->orderBy('position')->get();
         $campaign = Campaigns::find($id);
@@ -335,7 +340,7 @@ class CampaignsController extends Controller {
     }
 
     public function users($id, Request $request) {
-        \Session::put('campaign_id', $id);
+        Session::put('campaign_id', $id);
         if (isset($_POST['user'])) {
             $users = CampaignUser::where('campaign_id', '=', $id)->where('user_id', '=', $request->get('user'))->get();
             if (count($users) == 0) {
@@ -352,13 +357,13 @@ class CampaignsController extends Controller {
     }
 
     public function deleteUser($user_id) {
-        $users = CampaignUser::where('campaign_id', '=', \Session::get('campaign_id'))->where('user_id', '=', $user_id)->delete();
-        return Redirect('campaigns/users/' . \Session::get('campaign_id'));
+        $users = CampaignUser::where('campaign_id', '=', Session::get('campaign_id'))->where('user_id', '=', $user_id)->delete();
+        return Redirect('campaigns/users/' . Session::get('campaign_id'));
     }
     public function sendMail($id){
         $mail['html'] = file_get_contents(url('view/'.$id));
         $campaign = Campaigns::find($id);
-        \Mail::send('mail', $mail, function($message) use ($campaign) {
+        Mail::send('mail', $mail, function($message) use ($campaign) {
                     $message->from($campaign->cuenta);
                     $message->to($campaign->destino)->subject($campaign->asunto);
                     //$message->to("fernando.romero.morales@udla.edu.ec")->subject($campaign->asunto);

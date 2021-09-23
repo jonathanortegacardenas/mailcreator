@@ -1,16 +1,18 @@
 <?php
-namespace mailCreator\Http\Controllers;
+namespace App\Http\Controllers;
 use Symfony\Component\HttpFoundation\Session\Session;
 use mailCreator\Blocks;
 use mailCreator\Campaigns;
-use Illuminate\Http\Request; 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Http\Response;
-class BlocksController extends Controller{
+
+class BlocksController extends Controller
+{
 	public function listBlocks($id){
-        \Session::put('campaign_id',$id);
-        
+        Session::put('campaign_id',$id);
+
 		$bl = new Blocks;
 		$html = "";
 		$blocks = Blocks::where('campaign_id','=',$id)->orderBy('position')->get();
@@ -33,12 +35,12 @@ class BlocksController extends Controller{
 			$html = str_replace("\$\$color\$\$",$campaign->color,$html);
             }
                         $html = str_replace("\$\$position\$\$",$b->position,$html);
-			$view[] = $html;	
-		}  
+			$view[] = $html;
+		}
 		return View('blocks/view',array('title'=>"Previsualizaci&oacute;n del Correo - Campa&ntilde;a ".$campaign->title,'message'=>"Previsualiza el correo electrónico que será enviado",'campaign'=>$campaign,'blocks'=>$view));
 	}
 	public function addBlock(Request $request){
- 
+
 		if($request->has('_token')){
 			$blockInfo = $request->all();
 			$saveArray = null;
@@ -102,13 +104,13 @@ class BlocksController extends Controller{
 				$blockInfo['image_4']=$name;
 		 	}
 		 	$saveArray['content']=json_encode($blockInfo);
-			$saveArray['campaign_id'] = \Session::get('campaign_id');
+			$saveArray['campaign_id'] = Session::get('campaign_id');
 			$blocks = new Blocks();
 			$last = $blocks->getMaxPosition($saveArray['campaign_id'] );
 			$saveArray['position']=((is_null($last))?0:$last)+1;
 			Blocks::create($saveArray);
-            
-			return Redirect('blocks/list/'.\Session::get('campaign_id'));
+
+			return Redirect('blocks/list/' . Session::get('campaign_id'));
 		}
 		return View('blocks/create',array('title'=>"Agregar Bloque al correo",'message'=>'Puede agregar nuevos bloques para aumentar el contenido del correo electr&oacute;nico desde esta p&aacute;gina'));
 	}
@@ -211,7 +213,7 @@ class BlocksController extends Controller{
 			if(strstr($row,'image')){
 				$value = asset('uploads/'.$value);
 			}
-                       
+
 			$htmlData  = str_replace("\$\$".$row."\$\$",$value, $htmlData);
 			$html_form = str_replace("\$\$".$row."\$\$",$value,$html_form);
                         $html_form = str_replace("\$\$position\$\$",$block->position,$html_form);
@@ -220,7 +222,7 @@ class BlocksController extends Controller{
 			$htmlData = str_replace("images/shadow.png",asset('img/shadow.png'),$htmlData);
 			$htmlData = str_replace("\$\$shadow\$\$",asset('img/shadow.png'),$htmlData);
 			$htmlData = str_replace("\$\$color\$\$",$campaign->color,$htmlData);
-                        
+
               	}
 
 		return View('blocks/edit',array('title'=>'Editar bloque','message'=>'Realiza edici&oacute;n de un bloque previamente creado','form'=>$html_form,'html_data'=>$htmlData,'id'=>$id));

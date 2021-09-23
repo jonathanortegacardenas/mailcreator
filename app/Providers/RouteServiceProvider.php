@@ -1,6 +1,8 @@
-<?php namespace mailCreator\Providers;
+<?php namespace App\Providers;
 
 use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Route;
+
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 
 class RouteServiceProvider extends ServiceProvider {
@@ -24,7 +26,18 @@ class RouteServiceProvider extends ServiceProvider {
 	{
 		parent::boot($router);
 
-		//
+		$this->configureRateLimiting();
+
+        $this->routes(function () {
+            Route::middleware('web')
+                ->namespace($this->namespace)
+                ->group(base_path('routes/web.php'));
+        });
+
+		Route::prefix('api')
+			->middleware('api')
+			->namespace($this->namespace)
+			->group(base_path('routes/api.php'));
 	}
 
 	/**

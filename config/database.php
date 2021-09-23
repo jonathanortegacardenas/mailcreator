@@ -110,7 +110,7 @@ return [
 	|
 	*/
 
-	'redis' => [
+	'predis' => [
 
 		'cluster' => false,
 

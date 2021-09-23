@@ -25,7 +25,7 @@
 <div class="row" id="edit-design" style="display:none">
     <table style="margin: 0 auto" id="content_table_send">
     </table>
-    <form action="{{url('blocks/add')}}" class="form-horizontal" id="validation-form" method="post" enctype="multipart/form-data">
+    <form action="{{url('blocks/add')}}" class="form-horizontal" id="validation-form" method="POST" enctype="multipart/form-data">
         <input type="hidden" name="_token" value="{{ csrf_token() }}">
         <input type="hidden" name="type_selected" id="type_selected" value="">
         <div id="form" class="col-md-10 col-md-offset-2">
